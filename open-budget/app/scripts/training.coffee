@@ -1,4 +1,11 @@
-define(['backbone', 'models'], (Backbone, models) ->
+define(['backbone', 'models', 'tpl!templates/tour-dialog'], (Backbone, models, tpl_tour_dialog) ->
+
+    shouldNotTour =  ->
+      if (location.hash.indexOf('#main') == -1) && !sessionStorage.getItem('touring')
+        return true
+
+      if (location.hash.indexOf('#main') > -1 && location.hash.indexOf('?') > -1 && !sessionStorage.getItem('touring'))
+        return true
 
     class TrainingStep extends Backbone.Model
         defaults:
@@ -42,6 +49,9 @@ define(['backbone', 'models'], (Backbone, models) ->
                 $(@el).hide()
                 return
 
+            if (shouldNotTour())
+              return
+
             models.pageModel.on 'ready-budget-bubbles', => @loadTour()
             models.pageModel.on 'ready-budget-history', => @loadTour()
             models.pageModel.on 'ready-changegroup', => @loadTour()
@@ -64,10 +74,11 @@ define(['backbone', 'models'], (Backbone, models) ->
                 keyboard: false # Disabled since the buttons are hard-coded to ltr.
                 backdrop: true
                 backdropPadding: 5
-                template: JST.tour_dialog()
+                template: tpl_tour_dialog()
                 debug: true
                 redirect: (x) ->
                     console.log "want to redirect to <<#{x}>>"
+                    sessionStorage.setItem('touring', true);
                     if x!='/' then window.location.href = x
                 onShow: (x) -> console.log "onshow",x
             return options

@@ -1,4 +1,9 @@
-define(['backbone', 'models'], (Backbone, models) ->
+define([
+  'backbone',
+  'models',
+  'tpl!templates/header__current_budget',
+  'tpl!templates/header__changed_this_year'
+  ], (Backbone, models, header__current_budget, header__changed_this_year) ->
 
     window.up_or_down = (allocated,revised ) ->
                 if allocated > revised
@@ -15,15 +20,18 @@ define(['backbone', 'models'], (Backbone, models) ->
                     return "תוספת זו הביאה"
 
     window.transfers_by_year = (year) ->
-                return arr = $.grep(pageModel.changeGroups.models, (el,i) ->
-                    el.attributes.year is year)
+                if pageModel.changeGroups?
+                    return arr = $.grep(pageModel.changeGroups.models, (el,i) ->
+                        el.attributes.year is year)
+                else
+                    return []
 
     window.num_of_transfers_in_year_text = (year) ->
                 arr = transfers_by_year(year)
                 if arr.length > 1
                     return String(arr.length) + " העברות"
                 else
-                    return "העברה אחת"
+                    return "שינויים"
 
 
 
@@ -47,7 +55,7 @@ define(['backbone', 'models'], (Backbone, models) ->
             window.pageModel.get('currentItem')?.attributes.net_allocated?
 
         analyze: () ->
-            window.JST.header__current_budget( pageModel.get('currentItem').toJSON() )
+            header__current_budget( pageModel.get('currentItem').toJSON() )
 
     class ChangedThisYearAnalyzer extends BudgetAnalyzer
 
@@ -55,14 +63,14 @@ define(['backbone', 'models'], (Backbone, models) ->
             res = false
             # make sure currentItem exists - /equivs api can return an empty result
             if window.pageModel.get('currentItem')
-                year = window.pageModel.get('currentItem').attributes.year
+                year = window.pageModel.get('currentItem').get('year')
                 res = transfers_by_year(year).length > 0
 
             return res
 
 
         analyze: () ->
-            window.JST.header__changed_this_year( pageModel.get('currentItem').toJSON())
+            header__changed_this_year( pageModel.get('currentItem').toJSON())
 
 
 

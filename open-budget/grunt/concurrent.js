@@ -3,8 +3,7 @@ module.exports = {
     'coffee',
     'less',
     'imagemin',
-    'svgmin',
-    'htmlmin',
-  'jst'
+//    'svgmin',
+    'htmlmin'
   ]
 };

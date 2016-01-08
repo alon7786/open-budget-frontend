@@ -24,9 +24,9 @@ module.exports = function (grunt) {
 
     grunt.task.run([
       'clean:server',
+      'clean:generated_js',
       'coffee',
       'less',
-      'jst',
       'copy:server',
       'connect:livereload',
       'watch'
@@ -49,10 +49,10 @@ module.exports = function (grunt) {
 
   grunt.registerTask('build', [
     'clean:dist',
-    'copy:server',
-    'useminPrepare',
+    'clean:generated_js',
     'concurrent',
     'requirejs',
+    'cssmin',
     'copy',
     'rev',
     'usemin'

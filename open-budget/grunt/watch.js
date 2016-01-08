@@ -1,11 +1,7 @@
 module.exports = {
       coffee: {
-        files: ['<%= yeoman.app %>/scripts/{,*/}*.coffee'],
-        tasks: ['coffee']
-      },
-      jst: {
-        files: ['<%= yeoman.app %>/templates/*.html'],
-        tasks: ['jst']
+        files: ['<%= yeoman.app %>/scripts/**/*.coffee'],
+        tasks: ['clean:generated_js', 'coffee']
       },
       less: {
         files: ['<%= yeoman.app %>/styles/{,*/}*.less'],
@@ -21,7 +17,7 @@ module.exports = {
         files: [
           '<%= yeoman.app %>/*.html',
           '{.tmp,<%= yeoman.app %>}/styles/{,*/}*.css',
-          '{.tmp,<%= yeoman.app %>}/scripts/{,*/}*.js',
+          '{.tmp,<%= yeoman.app %>}/scripts/{,*/}*.coffee',
           '<%= yeoman.app %>/images/{,*/}*.{png,jpg,jpeg,gif,webp,svg}'
         ]
       }

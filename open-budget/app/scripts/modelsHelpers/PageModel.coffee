@@ -2,8 +2,6 @@ define ['backbone',
         'scripts/modelsHelpers/BudgetItemKids',
         'scripts/modelsHelpers/SupportFieldNormalizer',
         'scripts/modelsHelpers/ResizeNotifier',
-        'scripts/modelsHelpers/SelectedEntity',
-        'scripts/modelsHelpers/DaysLimit',
         'scripts/modelsHelpers/ChangeGroup',
         'scripts/modelsHelpers/ChangeGroups',
         'scripts/modelsHelpers/ChangeExplanation',
@@ -14,11 +12,10 @@ define ['backbone',
         'scripts/modelsHelpers/BudgetItem',
         'scripts/modelsHelpers/TakanaSupports',
         'scripts/modelsHelpers/TakanaSpending',
-        'scripts/modelsHelpers/NewSpendings',
-        'scripts/modelsHelpers/Participants',
-      ], (Backbone, BudgetItemKids, SupportFieldNormalizer, ResizeNotifier, SelectedEntity, DaysLimit, ChangeGroup,
+        'scripts/modelsHelpers/Participants'
+      ], (Backbone, BudgetItemKids, SupportFieldNormalizer, ResizeNotifier, ChangeGroup,
       ChangeGroups, ChangeExplanation, BudgetApprovals, BudgetHistory, ReadyAggregator, CompareRecords, BudgetItem,
-      TakanaSupports, TakanaSpending, NewSpendings, Participants) ->
+      TakanaSupports, TakanaSpending, Participants) ->
 
   class PageModel extends Backbone.Model
 
@@ -54,8 +51,6 @@ define ['backbone',
           @supportFieldNormalizer = new SupportFieldNormalizer([], pageModel: @)
           @mainPageTabs           = new window.MainPageTabs(@)
           @resizeNotifier         = new ResizeNotifier()
-          @selectedEntity         = new SelectedEntity()
-          @daysLimit              = new DaysLimit()
 
           @URLSchemeHandlerInstance = new window.URLSchemeHandler(@)
           window.URLSchemeHandlerInstance = @URLSchemeHandlerInstance
@@ -73,20 +68,22 @@ define ['backbone',
 
               @mainPageTabs.trigger("change:budgetCode")
               #@changeLines = new ChangeLines([], pageModel: @)
-              @changeGroups = new ChangeGroups([], pageModel: @)
               @budgetApprovals = new BudgetApprovals([], pageModel: @)
               @budgetHistory = new BudgetHistory([], pageModel: @)
               @budgetHistory.on 'reset',
                                 () =>
-                                    @set('currentItem', @budgetHistory.getLast())
+                                    year = @get('year')
+                                    @set('currentItem', @budgetHistory.getForYear(year))
                                     if @budgetHistory.length > 0
-                                        title = @budgetHistory.getLast().get('title')
+                                        title = @budgetHistory.getForYear(year).get('title')
                                         ga('send', 'event', 'navigation', 'budget', title, 1);
-
-              @readyEvents.push (new ReadyAggregator("ready-budget-history-pre")
-                                        .addCollection(@changeGroups)
+              aggregator = new ReadyAggregator("ready-budget-history-pre")
                                         .addCollection(@budgetHistory)
-                                        .addCollection(@budgetApprovals))
+                                        .addCollection(@budgetApprovals)
+              if digits > 2
+                  @changeGroups = new ChangeGroups([], pageModel: @)
+                  aggregator.addCollection(@changeGroups)
+              @readyEvents.push (aggregator)
 
               if digits >= 4
                   @on('ready-budget-history', ->
@@ -155,14 +152,12 @@ define ['backbone',
               @mainBudgetItem.do_fetch()
               @newBudgetItem.do_fetch()
 
-          @on 'change:spendingsPage', ->
-              @newSpendings = new NewSpendings([], pageModel: @)
-              @readyEvents.push (new ReadyAggregator("ready-spendings-page")
-                                                  .addCollection(@newSpendings))
-
           @on 'change:kinds', =>
               for kind in @get('kinds')
                   $('body').toggleClass("kind-#{kind}",true)
+
+      eventAlreadyTriggered: (eventName) =>
+        @get 'event-triggered-' + eventName || false
 
       addKind: (kind) ->
           kinds = _.clone(@get('kinds'))

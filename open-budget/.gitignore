@@ -23,6 +23,9 @@ Thumbs.db
 
 node_modules
 dist
+target
 .tmp
 *.map
 app/bower_components
+app/styles/*.css
+app/styles/*.css.map

@@ -1,6 +1,8 @@
 require.config({
     baseUrl: ".",
     paths: {
+        "hbs": "bower_components/require-handlebars-plugin/hbs",
+        "handlebarsRuntime":    "bower_components/require-handlebars-plugin/hbs/handlebars.runtime",
         "twitter":              "//platform.twitter.com/widgets",
         "hasadna-notifications":"//hasadna-notifications.appspot.com/static/hn",
         "jquery":               "bower_components/jquery/jquery",
@@ -15,10 +17,14 @@ require.config({
         "bootstrap-tour":       "bower_components/bootstrap-tour/build/js/bootstrap-tour",
         "pivot":                "bower_components/pivottable/dist/pivot",
         "d3_renderers":         "bower_components/pivottable/dist/d3_renderers",
+        "text":                 "bower_components/requirejs-text/text",
+        "tpl":                  "bower_components/requirejs-tpl/tpl",
+        "vendor/numbro":        "bower_components/numbro/numbro",
+        "vendor/moment":        "bower_components/moment/moment",
+        "vendor/bootstrap-select":    "bower_components/bootstrap-select/dist/js/bootstrap-select",
         "ecma_5":               "scripts/interval-query/lib/browser/ecma_5",
         "segment-tree-browser": "scripts/interval-query/lib/browser/segment-tree-browser",
         "team":                 "scripts/team",
-        "templates":            "scripts/templates",
         "url_scheme":           "scripts/url_scheme",
         "main_page_tabs":       "scripts/main_page_tabs",
         "models":               "scripts/models",
@@ -29,8 +35,6 @@ require.config({
         "views":                "scripts/views",
         "detailed_history":     "scripts/detailed_history",
         "single_changegroup":   "scripts/single_changegroup",
-        "entity_details":       "scripts/entity_details",
-        "spendings_page":       "scripts/spendings_page",
         "breadcrumb_header":    "scripts/breadcrumb_header",
         "analysis_header":      "scripts/analysis_header",
         "bubble_chart":         "scripts/bubble_chart",
@@ -43,7 +47,8 @@ require.config({
         "subscribe":            "scripts/subscribe",
         "hello":                "scripts/hello",
         "training":             "scripts/training",
-        "budget_view":          "scripts/budget_view"
+        "budget_view":           "scripts/budget_view",
+        "Hasadna/oBudget":       "scripts/Hasadna/oBudget"
     },
     shim: {
         pivot: {
@@ -61,10 +66,6 @@ require.config({
         },
         ecma_5: {
             exports: "Array.prototype.forEach"
-        },
-        templates: {
-            deps: ['underscore'],
-            exports: 'JST'
         },
         "twitter": {
             exports: "twttr"
@@ -85,6 +86,14 @@ require.config({
         },
         "modernizr": {
             exports: "Modernizr"
+        },
+        "vendor/StringView": {
+          exports: "StringView"
         }
+    },
+
+    hbs: {
+      handlebarsPath: 'handlebarsRuntime',
+      helperDirectory: 'Hasadna/oBudget/Misc/handlebarsHelpers/'
     }
 })

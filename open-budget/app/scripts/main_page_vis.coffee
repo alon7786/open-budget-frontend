@@ -1,4 +1,6 @@
-define(['jquery','backbone', 'models', 'templates', 'bubble_chart'], ($, Backbone, models, JST, BubbleChart) ->
+define(
+  ['jquery','backbone', 'models', 'bubble_chart', 'hbs!templates/main-budget-header', 'tpl!templates/bubble-group-label', 'tpl!templates/bubble-tooltip'],
+  ($, Backbone, models, BubbleChart, tpl_main_budget_header, tpl_bubble_group_label, tpl_bubble_tooltip) ->
 
     globalWidth = 0
 
@@ -129,51 +131,21 @@ define(['jquery','backbone', 'models', 'templates', 'bubble_chart'], ($, Backbon
         initialize: ->
             console.log("MainPageVis: initialize")
             @rendered = false
-            @model.on 'ready-budget-bubbles', =>
-                stateChange = (state, node) =>
-                    if (state == "initial")
-                        @$bubbleContainer.find(".bubble-group-label").remove()
-                        @$el.find("#grouping-kind").css("pointer-events", "").fadeTo(500, 1)
-                        models.pageModel.URLSchemeHandlerInstance.removeAttribute(
-                            "focusOn", false
-                        )
-                        @chart.toggleColorLegend(@toggle == 0)
-                        @chart.toggleCircleLegend(@toggle == 0)
-                        @addBubbleLabels()
-                    else if (state == "centered")
-                        @$bubbleContainer.find(".bubble-group-label").remove()
-                        @$el.find("#grouping-kind").css("pointer-events", "none").fadeTo(500, 0)
-                        @chart.toggleColorLegend(true)
-                        @chart.toggleCircleLegend(true)
-                        @addBubbleLabels(node)
-                @chart = new BubbleChart(
-                    el: @$el.find("#bubble-chart"),
-                    addSubNodes: @addKids,
-                    stateChange: stateChange
-                )
-                @chart_el = d3.select(@chart.el)
-                @$bubbleContainer = @$el.find("#bubble-chart-container")
-                @centers = [ new SimpleCentering(), new TopGroupCentering(), new FullGroupCentering(), new ParentCentering() ]
-                @prepareData()
-                @toggle = 0
-                if @model.URLSchemeHandlerInstance && @model.URLSchemeHandlerInstance.getAttribute('toggle')
-                    @toggle = parseInt(@model.URLSchemeHandlerInstance.getAttribute('toggle')) || 0
-                @switchToggle(@toggle,false)
-                @recalc_centers()
-                @render()
 
-                focusCode = models.pageModel.URLSchemeHandlerInstance.getAttribute('focusOn')
-                if focusCode
-                    @chart.focusOnCode(focusCode)
+            if @model.eventAlreadyTriggered 'ready-budget-bubbles'
+              @readyBudgetBubblesHandler()
+            else
+              @model.on 'ready-budget-bubbles', =>
+                @readyBudgetBubblesHandler()
 
-            @model.on 'ready-main-budget', =>
-                @$el.find("#main-budget-header").html(JST.main_budget_header({main:@model.mainBudgetItem.toJSON(), newb:@model.newBudgetItem.toJSON()}))
-                if @rendered
-                    @compare_2014()
+            if @model.eventAlreadyTriggered 'ready-main-budget'
+              @readyMainBudgetHandler()
+            else
+              @model.on 'ready-main-budget', =>
+                @readyMainBudgetHandler()
+
             @model.on 'resized', =>
-                if @rendered
-                    @recalc_centers()
-                    @chart.start()
+              @resizedHandler()
 
 
         events:
@@ -182,6 +154,53 @@ define(['jquery','backbone', 'models', 'templates', 'bubble_chart'], ($, Backbon
             'click .compare-2015': 'compare_2015_end'
             'click .compare-2015 .compare-year-start': 'compare_2015_start'
             'click .compare-2015 .compare-year-end': 'compare_2015_end'
+
+        readyBudgetBubblesHandler: =>
+          stateChange = (state, node) =>
+              if (state == "initial")
+                  @$bubbleContainer.find(".bubble-group-label").remove()
+                  @$el.find("#grouping-kind").css("pointer-events", "").fadeTo(500, 1)
+                  models.pageModel.URLSchemeHandlerInstance.removeAttribute(
+                      "focusOn", false
+                  )
+                  @chart.toggleColorLegend(@toggle == 0)
+                  @chart.toggleCircleLegend(@toggle == 0)
+                  @addBubbleLabels()
+              else if (state == "centered")
+                  @$bubbleContainer.find(".bubble-group-label").remove()
+                  @$el.find("#grouping-kind").css("pointer-events", "none").fadeTo(500, 0)
+                  @chart.toggleColorLegend(true)
+                  @chart.toggleCircleLegend(true)
+                  @addBubbleLabels(node)
+          @chart = new BubbleChart(
+              el: @$el.find("#bubble-chart"),
+              addSubNodes: @addKids,
+              stateChange: stateChange
+          )
+          @chart_el = d3.select(@chart.el)
+          @$bubbleContainer = @$el.find("#bubble-chart-container")
+          @centers = [ new SimpleCentering(), new TopGroupCentering(), new FullGroupCentering(), new ParentCentering() ]
+          @prepareData()
+          @toggle = 0
+          if @model.URLSchemeHandlerInstance && @model.URLSchemeHandlerInstance.getAttribute('toggle')
+              @toggle = parseInt(@model.URLSchemeHandlerInstance.getAttribute('toggle')) || 0
+          @switchToggle(@toggle,false)
+          @recalc_centers()
+          @render()
+
+          focusCode = models.pageModel.URLSchemeHandlerInstance.getAttribute('focusOn')
+          if focusCode
+              @chart.focusOnCode(focusCode)
+
+        resizedHandler: =>
+          if @rendered
+              @recalc_centers()
+              @chart.start()
+
+        readyMainBudgetHandler: =>
+          @$el.find("#main-budget-header").html(tpl_main_budget_header({main:@model.mainBudgetItem.toJSON(), newb:@model.newBudgetItem.toJSON()}))
+          if @rendered
+              @compare_2014()
 
         compare_2014: =>
             @set_actives('.compare-2014')
@@ -242,7 +261,7 @@ define(['jquery','backbone', 'models', 'templates', 'bubble_chart'], ($, Backbon
           title_data = center.getCenters()
 
           if centeredNode?
-              $(JST.bubble_group_label({
+              $(tpl_bubble_group_label({
                     total: centeredNode.rev,
                     title: centeredNode.src.get("title")
                 })).css({
@@ -253,15 +272,19 @@ define(['jquery','backbone', 'models', 'templates', 'bubble_chart'], ($, Backbon
           else
               for group, i in title_data
                 if group.title?
-                  $(JST.bubble_group_label(group)).css({
+                  $(tpl_bubble_group_label(group)).css({
                     top: (group.y + @chart.radius_scale(group.total)) + "px",
                     left: group.x + "px"
                   }).appendTo(@$bubbleContainer)
 
         addKids: (node, readyCallback) =>
-            code = node.src.get('code')
-            # TODO get the year from the model
-            year = 2015
+            year = node.src.get('year')
+            code = null
+            if @selectedComparison=='orig_2014/rev_2014'
+                code = node.src.get('prev_code')
+            if not code?
+                code = node.src.get('code')
+                year += 1
             centeredNodeKids = new pageModel.api.BudgetItemKids([], year: year, code: code, pageModel: pageModel)
             centeredNodeKids.on('sync', =>
                 console.log("kids are ready")
@@ -277,7 +300,7 @@ define(['jquery','backbone', 'models', 'templates', 'bubble_chart'], ($, Backbon
                         className: -> "child-bubble "+changeClass(this.orig,this.rev)+"_svg"
                         fill_color: null
                         stroke_color: null
-                        tooltip_contents: -> JST.bubble_tooltip(@)
+                        tooltip_contents: -> tpl_bubble_tooltip(@)
                         center: null
                         part: 0
                         subNode: true
@@ -311,7 +334,7 @@ define(['jquery','backbone', 'models', 'templates', 'bubble_chart'], ($, Backbon
                     className: -> "bubblesCircle "+changeClass(this.orig,this.rev)+"_svg"
                     fill_color: null
                     stroke_color: null
-                    tooltip_contents: -> JST.bubble_tooltip(this)
+                    tooltip_contents: -> tpl_bubble_tooltip(this)
                     center: null,
                     onMoreInfo: @moreInfo,
                     click: (d) =>
@@ -324,9 +347,12 @@ define(['jquery','backbone', 'models', 'templates', 'bubble_chart'], ($, Backbon
             @compare_2014()
 
         moreInfo: (node) ->
-            # TODO get the year from the model
-            year = 2015
-            window.location.hash = pageModel.URLSchemeHandlerInstance.linkToBudget(@id, year)
+            code = @src.get('prev_code')
+            year = @src.get('year')
+            if not code?
+                code = @src.get('code')
+                year += 1
+            window.location.hash = pageModel.URLSchemeHandlerInstance.linkToBudget(code, year)
             ###
             TODO: build a new view controller architecture
 
